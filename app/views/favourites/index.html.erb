@@ -1,0 +1,10 @@
+<h1>Favourite Products</h1>
+<% if @favourites&.any? %>
+  <ul>
+    <% @favourites.each do |product| %>
+      <li><%= link_to product.title, product_path(product) %></li>
+    <% end %>
+  </ul>
+<% else %>
+  <h4>You haven't favourited any products!</h4>
+<% end %>

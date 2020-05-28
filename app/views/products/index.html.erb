@@ -1,0 +1,16 @@
+<h1>Products</h1>
+
+<% if @tag.present? %>
+  <h6>
+    Showing products tagged by:
+    <span class="badge badge-pill badge-primary">
+      <%= @tag.name %>
+    </span>
+  </h6>
+<% end %>
+
+ <% @products.each do |product|  %>
+  <ul>
+    <li><%= link_to product.title, product_path(product) %></li>
+  </ul>
+<% end %>

@@ -1,0 +1,106 @@
+<h1><%= @product.title %></h1>
+<p>Description: <%= @product.description %></p>
+<p>Price: <%= number_to_currency(@product.price) %></p>
+<p>Sold by: <%= @product.user.full_name %></p>
+
+<% unless @product.tags.empty? %>
+  <div>
+    <% @product.tags.each do |tag| %>
+      <%= link_to(
+          tag.name,
+          products_path(tag: tag.name), class: "badge badge-pill badge-primary"
+      ) %>
+    <% end %>
+  </div>
+<% end %>
+
+<% if can? :edit, @product %>
+  <%= link_to "Edit Product", edit_product_path(@product) %> |
+<% end %>
+<% if can? :destroy, @product %>
+  <%= link_to "Delete Product", product_path(@product), method: :delete, data: { confirm: 'Are you sure that you want to delete this product?' } %>
+<% end %>
+
+<% if user_signed_in? && can?(:favourite, @product) %>
+  <% if @favourite.present? %>
+    <%= link_to fa_icon('star'), favourite_path(@favourite), method: :delete, style: 'color: yellow;' %>
+  <% else %>
+    <%= link_to fa_icon('star-o'), product_favourites_path(@product), method: :post, style: 'color: lightgrey;' %>
+  <% end %>
+<% end %>
+<hr />
+<h3>Leave a review</h3>
+<%#
+  New Review Form
+  `form_with model: [@product, @review]` requires there to be a method called
+  `product_reviews_path` defined in routes. Using the `resources` method in
+  routes, this gets defined for us (see config/routes.rb)
+  @review is an empty (non-persisted) review (Review.new) defined in `products#show`
+%>
+<%= form_with model: [@product, @review], local: true do |f| %>
+  <% if @review.errors.present? %>
+    <p>
+      <%= @review.errors.full_messages.join(', ') %>
+    </p>
+  <% end %>
+  <div>
+    <%= f.label :rating %>
+    <%= f.number_field :rating, in: 1..5 %>
+  </div>
+  <div>
+    <%= f.label :body %>
+    <%= f.text_area :body %>
+  </div>
+  <%= f.submit %>
+<% end %>
+
+<hr />
+<h3>Reviews</h3>
+<%#
+  Display all of the reviews for this product
+%>
+<% @reviews.each do |review| %>
+  <div class="<%= 'hidden-review' if review.hidden %>">
+    <h3>Rating: <%= review.rating %></h3>
+    <p>
+      <%= review.body %>
+    </p>
+    <p>Reviewed by: <%= review.user.full_name %></p>
+
+    <% if can? :crud, review %>
+      <%= link_to 'Delete', review_path(review), method: :delete, data: { confirm: 'Are you sure that you want to delete this review?' } %>
+    <% end %>
+    <% if can? :crud, @product %>
+      <%= link_to "#{review.hidden ? 'Show' : 'Hide' }", toggle_hidden_path(review), method: :patch %>
+    <% end %>
+
+    <% if can?(:like, review) %>
+      <% like = current_user.likes.find_by_review_id(review) %>
+      <% if like %>
+        <%= link_to fa_icon('thumbs-up 3x'), like_path(like), method: :delete %>
+      <% else %>
+        <%= link_to fa_icon('thumbs-o-up 3x'), review_likes_path(review), method: :post %>
+      <% end %>
+    <% end %>
+    (<%= pluralize review.likes.count, 'like' %>) |
+
+  <% vote = review.votes.find_by(user: current_user) %>
+  <span class="vote-widget">
+    <% if vote.nil? %>
+      <%= link_to(fa_icon('arrow-up'), review_votes_path(review, is_up: true), method: :post) %>
+      <%= review.vote_total %>
+      <%= link_to(fa_icon('arrow-down'), review_votes_path(review, is_up: false), method: :post) %>
+    <% elsif vote.is_up? %>
+      <%= link_to(fa_icon('arrow-up'), vote_path(vote), method: :delete, class: 'active') %>
+      <%= review.vote_total %>
+      <%= link_to(fa_icon('arrow-down'), vote_path(vote, is_up: false), method: :patch) %>
+    <% else %>
+      <%= link_to(fa_icon('arrow-up'), vote_path(vote, is_up: true), method: :patch) %>
+      <%= review.vote_total %>
+      <%= link_to(fa_icon('arrow-down'), vote_path(vote), method: :delete, class: 'active') %>
+    <% end %>
+  </span>
+  (<%= review.vote_total %>)
+
+  </div>
+<% end %>

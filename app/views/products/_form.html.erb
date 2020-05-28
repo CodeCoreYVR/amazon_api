@@ -1,0 +1,44 @@
+<%= form_with model: @product, local: true do |f| %>
+  <% if @product.errors.any? %>
+  <ul>
+    <% @product.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+  </ul>
+  <% end %>
+  <div class="form-group">
+    <%= f.label :title %>
+    <%= f.text_field :title %>
+  </div>
+  <div class="form-group">
+    <%= f.label :description %>
+    <%= f.text_area :description %>
+  </div>
+  <div class="form-group">
+    <%= f.label :price %>
+    <%= f.number_field :price %>
+  </div>
+  <div class="form-group">
+    <%= f.label :tag_names %>
+    <%= f.text_field :tag_names %>
+  </div>
+  <%= f.submit class: 'btn btn-primary' %>
+<% end %>
+
+<script>
+  // Documentation for selectize.js:
+  // https://selectize.github.io/selectize.js/
+  // For description of options that are usable go to:
+  // https://github.com/selectize/selectize.js/blob/master/docs/usage.md
+  $("#product_tag_names").selectize({
+    delimiter: ',',
+    persist: false,
+    labelField: "name",
+    valueField: "name",
+    searchField: "name",
+    options: <%= Tag.select(:name).to_json(except: [:id]).html_safe %>,
+    create (input) {
+      return { name: input }
+    }
+  })
+</script>
